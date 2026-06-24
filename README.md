@@ -33,7 +33,7 @@ It extracts and generalises the exploit chain pioneered by [EFF rayhunter](https
 - **Generic payload framework**: describe any ARM binary + its runtime config in a simple `payload.toml`, and the toolkit installs it as a managed `start-stop-daemon` service with a proper busybox init script.
 - **Full service lifecycle**: `install`, `uninstall`, `service start|stop|restart|status`, `list`.
 - **Port conflict detection**: declares ports at install time and warns on conflicts.
-- **Verified file transfer**: MD5 (network path) and SHA256 (USB path) on every pushed file.
+- **Verified file transfer**: MD5 (network path) and SHA256 (USB path) on every pushed file. The asymmetry is transport-determined: the network path verifies using `md5sum` inside the device's busybox environment (the lowest-common-denominator hash available in a nc shell); the USB path computes SHA256 host-side via Rust's SHA2 crate before the ADB push.
 - **Hotspot-safe**: all operations preserve stock 4G/LTE hotspot functionality.
 
 ---
@@ -216,11 +216,18 @@ See [GitHub Milestones](https://github.com/GlomarGadaffi/orbic-toolkit/milestone
 | Milestone | Focus |
 |-----------|-------|
 | **v0.1** | Core install / uninstall / shell (current) |
-| **v0.2** | Persistent shell (busybox telnetd / dropbear SSH init payload) |
+| **v0.2** | Persistent shell — **key-authenticated Dropbear SSH only** (see note below) |
 | **v0.3** | Cross-compile toolchain docs + Docker build env |
 | **v0.4** | Additional device support (TP-Link M7350, Moxee, TMOHS1) |
 | **v1.0** | Integration tests, CI pipeline, stable API |
 | **Future** | OpenWRT-style full firmware replacement (very long roadmap) |
+
+> **v0.2 security posture note.** Every operation in v0.1 opens port 24 only for the duration of one install session on your own LAN, and the listener is killed by reboot. That is the narrow-exposure posture and it is deliberate. v0.2 changes this: a Dropbear or telnetd init payload is a **standing root service that survives reboots**. That is a qualitatively different thing. Two hard constraints apply:
+>
+> 1. **Key-authenticated Dropbear only.** unauthenticated telnetd is explicitly out of scope for the built-in payload — it leaves an open root shell across reboots with no authentication boundary. If you install telnetd yourself via the generic payload framework, that is your choice and your risk; this toolkit will not ship it as a convenience payload.
+> 2. **Installer requires an authorized public key.** `orbic-toolkit install-shell` will refuse to complete unless a public key is supplied via `--authorized-key`. There is no "skip key" flag.
+>
+> If you are using this on a device that shares a WiFi AP with other people or that you do not physically control, a persistent root listener is not appropriate regardless of authentication.
 
 ---
 
