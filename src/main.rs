@@ -52,11 +52,18 @@ async fn main() -> Result<()> {
             else {
                 unreachable!()
             };
-            use orbic::exploit::TELNET_PORT;
+            use orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet, TELNET_PORT};
             print!("Logging in and starting telnet... ");
-            orbic::exploit::login_and_exploit(admin_ip, username, password).await?;
+            login_and_exploit(admin_ip, username, password).await?;
+            println!("done");
+            print!("Waiting for shell on port {TELNET_PORT}... ");
+            wait_for_telnet(admin_ip).await?;
             println!("done");
             println!("Telnet backdoor ready on {admin_ip}:{TELNET_PORT}");
+            if ops::persist::prompt().await {
+                let addr = telnet_addr(admin_ip)?;
+                ops::persist::persist_nc_shell(addr).await?;
+            }
         }
 
         Command::Run { command } => {
