@@ -1,0 +1,39 @@
+[package]
+name = "orbic-toolkit"
+version = "0.1.0"
+edition = "2024"
+description = "Universal Orbic RC400L root-access & payload installer"
+
+[[bin]]
+name = "orbic-toolkit"
+path = "src/main.rs"
+
+[dependencies]
+anyhow        = "1.0"
+base64_light  = "0.1.5"
+clap          = { version = "4", features = ["derive"] }
+md5           = "0.7.0"
+nusb          = "0.1.13"
+reqwest       = { version = "0.12", features = ["json"], default-features = false }
+serde         = { version = "1", features = ["derive"] }
+serde_json    = "1"
+sha2          = "0.10"
+tokio         = { version = "1", features = ["io-util", "io-std", "macros", "net", "rt", "rt-multi-thread", "time", "sync"] }
+tokio-retry2  = "0.5"
+tokio-stream  = "0.1"
+toml          = "0.8"
+
+[target.'cfg(unix)'.dependencies]
+termios = "0.3"
+
+[target.'cfg(all(target_os = "linux", not(target_os = "android")))'.dependencies.adb_client]
+git             = "https://github.com/EFForg/adb_client.git"
+rev             = "e511662394e4fa32865c154c40f81a3d846f700c"
+default-features = false
+features        = ["trans-nusb"]
+
+[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies.adb_client]
+git             = "https://github.com/EFForg/adb_client.git"
+rev             = "e511662394e4fa32865c154c40f81a3d846f700c"
+default-features = false
+features        = ["trans-libusb"]
