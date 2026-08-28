@@ -8,6 +8,7 @@ pub async fn install(
     method: &ConnectionMethod,
     manifest: &PayloadManifest,
     binary: &[u8],
+    rootshell_binary: Option<&[u8]>,
     no_init: bool,
     no_reboot: bool,
 ) -> Result<()> {
@@ -24,10 +25,15 @@ pub async fn install(
 
     match method {
         ConnectionMethod::Network { admin_ip, username, password } => {
+            if rootshell_binary.is_some() {
+                anyhow::bail!("--rootshell is only supported with --via usb (ADB-based root)");
+            }
             install_network(admin_ip, username, password, manifest, binary, no_init, no_reboot)
                 .await
         }
-        ConnectionMethod::Usb => install_usb(manifest, binary, no_init, no_reboot).await,
+        ConnectionMethod::Usb => {
+            install_usb(manifest, binary, rootshell_binary, no_init, no_reboot).await
+        }
     }
 }
 
@@ -94,12 +100,13 @@ async fn install_network(
 async fn install_usb(
     manifest: &PayloadManifest,
     binary: &[u8],
+    rootshell_binary: Option<&[u8]>,
     no_init: bool,
     no_reboot: bool,
 ) -> Result<()> {
     use crate::orbic::usb::open_connection;
 
-    let mut conn = open_connection(None).await?;
+    let mut conn = open_connection(rootshell_binary).await?;
 
     // Remount root rw
     conn.run_command("mount -o remount,rw /dev/ubi0_0 /").await?;

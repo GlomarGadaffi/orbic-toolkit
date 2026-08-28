@@ -66,6 +66,18 @@ async fn main() -> Result<()> {
             }
         }
 
+        Command::SetupRoot { rootshell } => {
+            if !matches!(cli.via, Via::Usb) {
+                anyhow::bail!("setup-root is only available for --via usb");
+            }
+            let binary = std::fs::read(rootshell)?;
+            // open_connection switches to ADB mode, pushes the binary, sets setuid
+            // 4755, and verifies `id` reports uid=0 -- bailing with a clear error
+            // if any step fails.
+            orbic::usb::open_connection(Some(&binary)).await?;
+            println!("Rootshell installed at /bin/rootshell and verified (uid=0).");
+        }
+
         Command::Run { command } => {
             let output = match cli.via {
                 Via::Network => {
@@ -132,11 +144,20 @@ async fn main() -> Result<()> {
             println!("Pulled {remote} → {local} ({} bytes)", data.len());
         }
 
-        Command::Install { manifest, binary, no_init, no_reboot } => {
+        Command::Install { manifest, binary, rootshell, no_init, no_reboot } => {
             let method = cli.connection_method()?;
             let manifest = payload::PayloadManifest::from_file(manifest)?;
             let binary = std::fs::read(binary)?;
-            ops::install::install(&method, &manifest, &binary, *no_init, *no_reboot).await?;
+            let rootshell_bytes = rootshell.as_deref().map(std::fs::read).transpose()?;
+            ops::install::install(
+                &method,
+                &manifest,
+                &binary,
+                rootshell_bytes.as_deref(),
+                *no_init,
+                *no_reboot,
+            )
+            .await?;
         }
 
         Command::Uninstall { name, no_reboot } => {
