@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: check/test/clippy (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo check
+        run: cargo check --all-targets
+
+      # Integration tests need real Orbic RC400L hardware and can't run in CI --
+      # this exercises the unit tests only (see #1/#2/#17).
+      - name: cargo test
+        run: cargo test
+
+      - name: cargo clippy
+        run: cargo clippy --all-targets -- -D warnings
