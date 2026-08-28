@@ -37,6 +37,13 @@ pub async fn persist_nc_shell(addr: SocketAddr) -> Result<()> {
     Ok(())
 }
 
+/// Not wired to a CLI command yet. The nc-shell persistence this undoes is the
+/// unauthenticated-root-on-boot mechanism the README (v0.2 roadmap) already
+/// flags for replacement by key-authenticated Dropbear SSH (#7/#8) -- adding
+/// new CLI surface around it now would expand a feature the project wants to
+/// retire, not fix. Kept for symmetry with `persist_nc_shell` and for anyone
+/// removing it manually via `orbic-toolkit shell` in the meantime.
+#[allow(dead_code)]
 pub async fn remove_persist(addr: SocketAddr) -> Result<()> {
     use crate::connection::telnet::send_command;
 

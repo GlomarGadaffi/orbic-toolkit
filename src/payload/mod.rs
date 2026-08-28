@@ -14,6 +14,10 @@ const RESERVED_PORTS: &[u16] = &[
 pub struct PayloadManifest {
     /// Service name — used as the init script filename and start-stop-daemon identifier
     pub name: String,
+    /// Part of the manifest schema payload authors write -- parsed for forward
+    /// compatibility (e.g. a future `orbic-toolkit status` reporting installed
+    /// versions) but not read anywhere internally yet.
+    #[allow(dead_code)]
     pub version: String,
     /// Absolute path on device where the binary will live
     pub data_dir: String,
