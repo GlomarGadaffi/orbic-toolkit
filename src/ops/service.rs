@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use crate::cli::ServiceAction;
-use crate::connection::{ConnectionMethod, DeviceConnection};
+use crate::connection::{ConnectionMethod, DeviceConnection, TelnetConnection};
 use crate::orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet};
 
 pub async fn service(
@@ -40,12 +40,10 @@ pub async fn status(method: &ConnectionMethod, name: &str) -> Result<()> {
 async fn run_one(method: &ConnectionMethod, command: &str) -> Result<String> {
     match method {
         ConnectionMethod::Network { admin_ip, username, password } => {
-            use crate::connection::telnet::send_command_with_output;
             login_and_exploit(admin_ip, username, password).await?;
             wait_for_telnet(admin_ip).await?;
-            let addr = telnet_addr(admin_ip)?;
-            send_command_with_output(addr, command, false, std::time::Duration::from_secs(10))
-                .await
+            let mut conn = TelnetConnection { addr: telnet_addr(admin_ip)? };
+            conn.run_command(command).await
         }
         ConnectionMethod::Usb => {
             use crate::orbic::usb::open_connection;
@@ -62,13 +60,11 @@ async fn service_network(
     name: &str,
     action: &str,
 ) -> Result<()> {
-    use crate::connection::telnet::send_command;
-
     login_and_exploit(admin_ip, username, password).await?;
     wait_for_telnet(admin_ip).await?;
-    let addr = telnet_addr(admin_ip)?;
+    let mut conn = TelnetConnection { addr: telnet_addr(admin_ip)? };
     let init_path = format!("/etc/init.d/{name}");
-    send_command(addr, &format!("{init_path} {action}"), "", false).await?;
+    conn.run_command(&format!("{init_path} {action}")).await?;
     Ok(())
 }
 

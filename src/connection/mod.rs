@@ -47,3 +47,11 @@ impl DeviceConnection for TelnetConnection {
         telnet::send_file(self.addr, path, content, false).await
     }
 }
+
+impl TelnetConnection {
+    /// Run a command and verify `expected_output` appears in the result.
+    /// Not part of `DeviceConnection` -- the USB path has no equivalent check today.
+    pub async fn run_command_checked(&mut self, command: &str, expected_output: &str) -> Result<()> {
+        telnet::send_command(self.addr, command, expected_output, false).await
+    }
+}

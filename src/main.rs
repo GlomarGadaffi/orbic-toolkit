@@ -61,8 +61,8 @@ async fn main() -> Result<()> {
             println!("done");
             println!("Telnet backdoor ready on {admin_ip}:{TELNET_PORT}");
             if ops::persist::prompt().await {
-                let addr = telnet_addr(admin_ip)?;
-                ops::persist::persist_nc_shell(addr).await?;
+                let mut conn = connection::TelnetConnection { addr: telnet_addr(admin_ip)? };
+                ops::persist::persist_nc_shell(&mut conn).await?;
             }
         }
 

@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::connection::{ConnectionMethod, DeviceConnection};
+use crate::connection::{ConnectionMethod, DeviceConnection, TelnetConnection};
 use crate::orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet};
 use crate::payload::{PayloadManifest, init};
 
@@ -40,8 +40,6 @@ async fn install_network(
     no_init: bool,
     no_reboot: bool,
 ) -> Result<()> {
-    use crate::connection::telnet::{send_command, send_file};
-
     print!("Logging in and starting telnet... ");
     login_and_exploit(admin_ip, username, password).await?;
     println!("done");
@@ -50,45 +48,31 @@ async fn install_network(
     wait_for_telnet(admin_ip).await?;
     println!("done");
 
-    let addr = telnet_addr(admin_ip)?;
+    let mut conn = TelnetConnection { addr: telnet_addr(admin_ip)? };
 
     // Remount root rw (required on Orbic and Moxee)
-    send_command(addr, "mount -o remount,rw /dev/ubi0_0 /", "exit code 0", false).await?;
+    conn.run_command_checked("mount -o remount,rw /dev/ubi0_0 /", "exit code 0").await?;
 
     // Create data directory
-    send_command(
-        addr,
-        &format!("mkdir -p {}", manifest.data_dir),
-        "exit code 0",
-        false,
-    )
-    .await?;
+    conn.run_command_checked(&format!("mkdir -p {}", manifest.data_dir), "exit code 0").await?;
 
     // Push binary
     println!("Pushing binary to {}...", manifest.binary_path());
-    send_file(addr, &manifest.binary_path(), binary, false).await?;
-    send_command(
-        addr,
-        &format!("chmod +x {}", manifest.binary_path()),
-        "exit code 0",
-        false,
-    )
-    .await?;
+    conn.write_file(&manifest.binary_path(), binary).await?;
+    conn.run_command_checked(&format!("chmod +x {}", manifest.binary_path()), "exit code 0").await?;
 
     if !no_init {
         let init_script = init::render(manifest);
         println!("Installing init script at {}...", manifest.init_script_path());
-        send_file(addr, &manifest.init_script_path(), init_script.as_bytes(), false).await?;
-        send_command(
-            addr,
+        conn.write_file(&manifest.init_script_path(), init_script.as_bytes()).await?;
+        conn.run_command_checked(
             &format!("chmod 755 {}", manifest.init_script_path()),
             "exit code 0",
-            false,
         )
         .await?;
     }
 
-    finish(addr, no_reboot, admin_ip).await
+    finish(&mut conn, no_reboot, admin_ip).await
 }
 
 async fn install_usb(
@@ -130,16 +114,10 @@ async fn install_usb(
     Ok(())
 }
 
-async fn finish(
-    addr: std::net::SocketAddr,
-    no_reboot: bool,
-    admin_ip: &str,
-) -> Result<()> {
-    use crate::connection::telnet::send_command;
-
+async fn finish(conn: &mut TelnetConnection, no_reboot: bool, admin_ip: &str) -> Result<()> {
     if !no_reboot {
         println!("Installation complete. Rebooting...");
-        send_command(addr, "shutdown -r -t 1 now", "", false).await.ok();
+        conn.run_command("shutdown -r -t 1 now").await.ok();
         println!(
             "Device rebooting. Service will start automatically after boot (http://{admin_ip})."
         );
