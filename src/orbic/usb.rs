@@ -386,6 +386,10 @@ async fn wait_for_usb_device(vendor_id: u16, product_id: u16) -> Result<()> {
 }
 
 /// Send a raw AT command via an already-opened USB serial interface.
+/// Not called yet -- kept as the primitive future device-specific bring-up
+/// (see #14/#15/#16 device-support issues) will need for model-specific AT
+/// exploitation, same shape as the USB control/bulk calls already in this file.
+#[allow(dead_code)]
 pub async fn send_serial_cmd(interface: &Interface, command: &str) -> Result<()> {
     let data = format!("\r\n{command}\r\n");
     let timeout = Duration::from_secs(2);
