@@ -103,6 +103,14 @@ pub enum Command {
     /// (Network only) Open the nc backdoor on port 24 without entering a shell
     StartTelnet,
 
+    /// (USB only) Install /bin/rootshell standalone for persistent root ADB access,
+    /// without installing a payload
+    SetupRoot {
+        /// Path to a pre-compiled ARM rootshell binary
+        #[arg(long)]
+        rootshell: String,
+    },
+
     /// Run a single command on the device and print its output
     Run {
         command: String,
@@ -132,6 +140,11 @@ pub enum Command {
         /// Path to the ARM binary to push to the device
         #[arg(long)]
         binary: String,
+
+        /// (USB only) Path to a pre-compiled ARM rootshell binary to install for full,
+        /// persistent root access alongside the payload
+        #[arg(long)]
+        rootshell: Option<String>,
 
         /// Push the binary only — skip writing the init script
         #[arg(long)]

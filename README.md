@@ -112,6 +112,22 @@ The toolkit will:
 - Render and install a busybox init script at `/etc/init.d/my-tool`
 - Reboot (the service starts automatically on every boot)
 
+USB installs can also set up persistent root at the same time with `--rootshell`:
+
+```sh
+orbic-toolkit --via usb install payload.toml --binary ./my-tool-arm --rootshell ./rootshell-arm
+```
+
+### Standalone root access (USB only)
+
+If you just want persistent root ADB access without installing a payload:
+
+```sh
+orbic-toolkit --via usb setup-root --rootshell ./rootshell-arm
+```
+
+Pushes `/bin/rootshell`, sets setuid 4755, and verifies `id` reports `uid=0` before returning.
+
 ### Uninstall
 
 ```sh
