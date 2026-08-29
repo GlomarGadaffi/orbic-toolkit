@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::connection::{ConnectionMethod, DeviceConnection};
+use crate::connection::{ConnectionMethod, DeviceConnection, TelnetConnection};
 use crate::orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet};
 
 pub async fn uninstall(
@@ -23,8 +23,6 @@ async fn uninstall_network(
     name: &str,
     no_reboot: bool,
 ) -> Result<()> {
-    use crate::connection::telnet::send_command;
-
     print!("Logging in and starting telnet... ");
     login_and_exploit(admin_ip, username, password).await?;
     println!("done");
@@ -33,24 +31,24 @@ async fn uninstall_network(
     wait_for_telnet(admin_ip).await?;
     println!("done");
 
-    let addr = telnet_addr(admin_ip)?;
+    let mut conn = TelnetConnection { addr: telnet_addr(admin_ip)? };
     let init_path = format!("/etc/init.d/{name}");
 
     // Stop service (ignore errors — it may not be running)
-    send_command(addr, &format!("{init_path} stop"), "", false).await.ok();
+    conn.run_command(&format!("{init_path} stop")).await.ok();
 
     // Remove init script
     println!("Removing init script {init_path}...");
-    send_command(addr, &format!("rm -f {init_path}"), "exit code 0", false).await?;
+    conn.run_command_checked(&format!("rm -f {init_path}"), "exit code 0").await?;
 
     // Remove data directory
     let data_dir = format!("/data/{name}");
     println!("Removing data directory {data_dir}...");
-    send_command(addr, &format!("rm -rf {data_dir}"), "exit code 0", false).await?;
+    conn.run_command_checked(&format!("rm -rf {data_dir}"), "exit code 0").await?;
 
     if !no_reboot {
         println!("Uninstall complete. Rebooting...");
-        send_command(addr, "shutdown -r -t 1 now", "", false).await.ok();
+        conn.run_command("shutdown -r -t 1 now").await.ok();
     } else {
         println!("Uninstall complete (no reboot).");
     }

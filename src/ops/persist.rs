@@ -2,6 +2,8 @@ use std::net::SocketAddr;
 
 use anyhow::Result;
 
+use crate::connection::{DeviceConnection, TelnetConnection};
+
 pub const INIT_PATH: &str = "/etc/init.d/S99orbic-shell";
 
 // Busybox nc -ll keeps the port open across multiple connections (persistent listener).
@@ -26,12 +28,10 @@ pub async fn prompt() -> bool {
     matches!(line.trim().to_lowercase().as_str(), "y" | "yes")
 }
 
-pub async fn persist_nc_shell(addr: SocketAddr) -> Result<()> {
-    use crate::connection::telnet::{send_command, send_file};
-
-    send_command(addr, "mount -o remount,rw /dev/ubi0_0 /", "", false).await?;
-    send_file(addr, INIT_PATH, INIT_SCRIPT, false).await?;
-    send_command(addr, &format!("chmod 755 {INIT_PATH}"), "", false).await?;
+pub async fn persist_nc_shell(conn: &mut TelnetConnection) -> Result<()> {
+    conn.run_command("mount -o remount,rw /dev/ubi0_0 /").await?;
+    conn.write_file(INIT_PATH, INIT_SCRIPT).await?;
+    conn.run_command(&format!("chmod 755 {INIT_PATH}")).await?;
     println!("Persistent nc shell installed ({INIT_PATH}).");
     println!("Management: /etc/init.d/S99orbic-shell {{start|stop|restart}}");
     Ok(())
