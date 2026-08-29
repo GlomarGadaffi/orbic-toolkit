@@ -316,12 +316,11 @@ async fn adb_echo_test(mut device: ADBUSBDevice) -> Result<ADBUSBDevice> {
         Ok::<(ADBUSBDevice, Vec<u8>), RustADBError>((device, buf))
     });
     sleep(Duration::from_secs(1)).await;
-    if thread.is_finished() {
-        if let Ok(Ok((dev, buf))) = thread.join() {
-            if std::str::from_utf8(&buf).map(|s| s.contains(ECHO_STR)).unwrap_or(false) {
-                return Ok(dev);
-            }
-        }
+    if thread.is_finished()
+        && let Ok(Ok((dev, buf))) = thread.join()
+        && std::str::from_utf8(&buf).map(|s| s.contains(ECHO_STR)).unwrap_or(false)
+    {
+        return Ok(dev);
     }
     bail!("ADB echo test failed — try disconnecting and reconnecting the device")
 }
