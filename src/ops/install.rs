@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use crate::connection::{ConnectionMethod, DeviceConnection, TelnetConnection};
-use crate::orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet};
+use crate::orbic::remote_access::{login_and_enable_remote_shell, telnet_addr, wait_for_telnet};
 use crate::payload::{PayloadManifest, init};
 
 pub async fn install(
@@ -47,7 +47,7 @@ async fn install_network(
     no_reboot: bool,
 ) -> Result<()> {
     print!("Logging in and starting telnet... ");
-    login_and_exploit(admin_ip, username, password).await?;
+    login_and_enable_remote_shell(admin_ip, username, password).await?;
     println!("done");
 
     print!("Waiting for telnet on port 24... ");

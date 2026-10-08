@@ -21,10 +21,10 @@ async fn main() -> Result<()> {
                 else {
                     unreachable!()
                 };
-                use orbic::exploit::{login_and_exploit, wait_for_telnet};
-                use orbic::exploit::TELNET_PORT;
+                use orbic::remote_access::{login_and_enable_remote_shell, wait_for_telnet};
+                use orbic::remote_access::TELNET_PORT;
                 print!("Logging in and starting telnet... ");
-                login_and_exploit(admin_ip, username, password).await?;
+                login_and_enable_remote_shell(admin_ip, username, password).await?;
                 println!("done");
                 print!("Waiting for shell on port {TELNET_PORT}... ");
                 wait_for_telnet(admin_ip).await?;
@@ -52,9 +52,9 @@ async fn main() -> Result<()> {
             else {
                 unreachable!()
             };
-            use orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet, TELNET_PORT};
+            use orbic::remote_access::{login_and_enable_remote_shell, telnet_addr, wait_for_telnet, TELNET_PORT};
             print!("Logging in and starting telnet... ");
-            login_and_exploit(admin_ip, username, password).await?;
+            login_and_enable_remote_shell(admin_ip, username, password).await?;
             println!("done");
             print!("Waiting for shell on port {TELNET_PORT}... ");
             wait_for_telnet(admin_ip).await?;
@@ -88,8 +88,8 @@ async fn main() -> Result<()> {
                         unreachable!()
                     };
                     use connection::telnet::send_command_with_output;
-                    use orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet};
-                    login_and_exploit(admin_ip, username, password).await?;
+                    use orbic::remote_access::{login_and_enable_remote_shell, telnet_addr, wait_for_telnet};
+                    login_and_enable_remote_shell(admin_ip, username, password).await?;
                     wait_for_telnet(admin_ip).await?;
                     let addr = telnet_addr(admin_ip)?;
                     send_command_with_output(addr, command, false, std::time::Duration::from_secs(30))
@@ -112,9 +112,9 @@ async fn main() -> Result<()> {
                     unreachable!()
                 };
                 use connection::telnet::send_file;
-                use orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet};
+                use orbic::remote_access::{login_and_enable_remote_shell, telnet_addr, wait_for_telnet};
                 let content = std::fs::read(local)?;
-                login_and_exploit(admin_ip, username, password).await?;
+                login_and_enable_remote_shell(admin_ip, username, password).await?;
                 wait_for_telnet(admin_ip).await?;
                 let addr = telnet_addr(admin_ip)?;
                 send_file(addr, remote, &content, false).await?;
@@ -135,8 +135,8 @@ async fn main() -> Result<()> {
                 anyhow::bail!("pull is currently only supported via --via network");
             };
             use connection::telnet::recv_file;
-            use orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet};
-            login_and_exploit(admin_ip, username, password).await?;
+            use orbic::remote_access::{login_and_enable_remote_shell, telnet_addr, wait_for_telnet};
+            login_and_enable_remote_shell(admin_ip, username, password).await?;
             wait_for_telnet(admin_ip).await?;
             let addr = telnet_addr(admin_ip)?;
             let data = recv_file(addr, remote).await?;
