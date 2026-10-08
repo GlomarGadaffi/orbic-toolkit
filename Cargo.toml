@@ -3,6 +3,7 @@ name = "orbic-toolkit"
 version = "0.1.0"
 edition = "2024"
 description = "Universal Orbic RC400L root-access & payload installer"
+license = "GPL-3.0-only"
 
 [[bin]]
 name = "orbic-toolkit"
