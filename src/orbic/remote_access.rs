@@ -21,7 +21,7 @@ struct ExploitResponse {
 /// Authenticate against the Orbic web admin API and inject a persistent nc shell
 /// on TELNET_PORT via the SetRemoteAccessCfg command-injection vulnerability.
 /// Ported from rayhunter/installer/src/orbic_network.rs.
-pub async fn login_and_exploit(admin_ip: &str, username: &str, password: &str) -> Result<()> {
+pub async fn login_and_enable_remote_shell(admin_ip: &str, username: &str, password: &str) -> Result<()> {
     // Disable connection pooling: the Orbic's web server does not properly support
     // HTTP/1.1 keep-alive, causing "connection closed before message completed" errors.
     let client = Client::builder().pool_max_idle_per_host(0).build()?;

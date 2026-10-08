@@ -3,7 +3,7 @@
 **Universal root-access & payload installer for the Orbic RC400L mobile hotspot**
 
 [![Build](https://img.shields.io/github/actions/workflow/status/GlomarGadaffi/orbic-toolkit/ci.yml?branch=main)](https://github.com/GlomarGadaffi/orbic-toolkit/actions)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
 Orbic-toolkit gives you full root shell access on the Orbic RC400L ARMv7 Linux hotspot and a generic framework for deploying any ARM binary as a managed busybox `start-stop-daemon` service — without modifying the firmware or breaking the stock hotspot functionality.
 
@@ -250,7 +250,7 @@ See [GitHub Milestones](https://github.com/GlomarGadaffi/orbic-toolkit/milestone
 ## Acknowledgements
 
 - [Electronic Frontier Foundation](https://www.eff.org/) and the [rayhunter contributors](https://github.com/EFForg/rayhunter/graphs/contributors) for the original exploit research and installer framework that this toolkit is based on.
-- The rayhunter project is licensed under GPL-3.0. orbic-toolkit is an independent re-implementation; no rayhunter source code is copied verbatim into this repository.
+- Parts of orbic-toolkit are ported from the rayhunter installer, which is licensed under GPL-3.0. orbic-toolkit is therefore licensed under GPL-3.0-only. Which files were ported, and how, is recorded in [PROVENANCE.md](PROVENANCE.md).
 
 ---
 
@@ -260,4 +260,4 @@ Issues and PRs welcome. Please tag issues with the appropriate labels (see the l
 
 ## License
 
-[MIT](LICENSE) — Copyright (c) 2025 GlomarGadaffi
+GPL-3.0-only. Copyright (c) 2025 GlomarGadaffi. See [LICENSE](LICENSE) and [PROVENANCE.md](PROVENANCE.md).

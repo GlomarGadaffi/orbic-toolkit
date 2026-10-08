@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use crate::cli::ServiceAction;
 use crate::connection::{ConnectionMethod, DeviceConnection, TelnetConnection};
-use crate::orbic::exploit::{login_and_exploit, telnet_addr, wait_for_telnet};
+use crate::orbic::remote_access::{login_and_enable_remote_shell, telnet_addr, wait_for_telnet};
 
 pub async fn service(
     method: &ConnectionMethod,
@@ -40,7 +40,7 @@ pub async fn status(method: &ConnectionMethod, name: &str) -> Result<()> {
 async fn run_one(method: &ConnectionMethod, command: &str) -> Result<String> {
     match method {
         ConnectionMethod::Network { admin_ip, username, password } => {
-            login_and_exploit(admin_ip, username, password).await?;
+            login_and_enable_remote_shell(admin_ip, username, password).await?;
             wait_for_telnet(admin_ip).await?;
             let mut conn = TelnetConnection { addr: telnet_addr(admin_ip)? };
             conn.run_command(command).await
@@ -60,7 +60,7 @@ async fn service_network(
     name: &str,
     action: &str,
 ) -> Result<()> {
-    login_and_exploit(admin_ip, username, password).await?;
+    login_and_enable_remote_shell(admin_ip, username, password).await?;
     wait_for_telnet(admin_ip).await?;
     let mut conn = TelnetConnection { addr: telnet_addr(admin_ip)? };
     let init_path = format!("/etc/init.d/{name}");
